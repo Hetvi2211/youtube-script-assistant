@@ -38,7 +38,7 @@ def test_basic_llm_connection():
         print("[!] WARNING: No API keys found in .env file.")
         print("Please edit .env and add your API key before running LLM queries.\n")
         print("Example inside .env:")
-        print("GOOGLE_API_KEY=your_gemini_api_key_here\n")
+        print("GROQ_API_KEY=your_groq_api_key_here\n")
         return False
 
     # 2. Initialize LLM via LangChain

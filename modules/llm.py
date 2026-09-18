@@ -11,6 +11,10 @@ from langchain_core.language_models import BaseChatModel
 # Load environment variables from .env file
 load_dotenv()
 
+DEFAULT_PROVIDER = "groq"
+DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
+
+
 def get_llm(provider: str = None, model_name: str = None, temperature: float = 0.7) -> BaseChatModel:
     """
     Returns an initialized LangChain LLM instance based on available API keys or specified provider.
@@ -21,19 +25,9 @@ def get_llm(provider: str = None, model_name: str = None, temperature: float = 0
     - 'groq': Uses langchain-groq (Llama 3.3 70B)
     """
     
-    # Auto-detect provider if not explicitly provided
+    # Groq is the active default; explicit provider arguments remain supported.
     if not provider:
-        if os.getenv("GOOGLE_API_KEY"):
-            provider = "google"
-        elif os.getenv("OPENAI_API_KEY"):
-            provider = "openai"
-        elif os.getenv("GROQ_API_KEY"):
-            provider = "groq"
-        else:
-            raise ValueError(
-                "No API key found in environment (.env). "
-                "Please set GOOGLE_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY in your .env file."
-            )
+        provider = DEFAULT_PROVIDER
             
     provider = provider.lower()
     
@@ -70,10 +64,13 @@ def get_llm(provider: str = None, model_name: str = None, temperature: float = 0
     elif provider == "groq":
         try:
             from langchain_groq import ChatGroq
-            selected_model = model_name or "llama-3.3-70b-versatile"
+            selected_model = model_name or DEFAULT_GROQ_MODEL
             api_key = os.getenv("GROQ_API_KEY")
             if not api_key:
-                raise ValueError("GROQ_API_KEY is missing in .env file.")
+                raise ValueError(
+                    "GROQ_API_KEY is missing in .env file. "
+                    "Add your Groq API key to the local .env file."
+                )
             return ChatGroq(
                 model_name=selected_model,
                 temperature=temperature,

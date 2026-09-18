@@ -28,8 +28,9 @@
 
 ## 3. LLM Provider Rationale
 
-### Selected Primary Provider: **Google Gemini API (`gemini-1.5-flash` / `gemini-2.0-flash`)**
-*(Flexible fallback options configured for OpenAI and Groq in `modules/llm.py`)*
+### Selected Primary Provider: **Groq API (`openai/gpt-oss-120b`)**
+
+*(Optional provider integrations for Google and OpenAI remain available in `modules/llm.py`.)*
 
 ### Why API-Based LLM was Selected:
 1. **Zero Hardware Overhead**: Runs smoothly without demanding an expensive local GPU.
@@ -49,7 +50,7 @@ User Input Parameters (Topic, Audience, Tone, Length, Style)
                     │
                     ▼
           modules.llm.get_llm()
-  (Auto-detects GOOGLE_API_KEY / OPENAI_API_KEY)
+  (Uses GROQ_API_KEY by default)
                     │
                     ▼
         RunnableSequence (Prompt | LLM)

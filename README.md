@@ -83,14 +83,13 @@ copy .env.example .env
 # macOS / Linux
 cp .env.example .env
 ```
-Edit `.env`:
+Edit `.env` and configure Groq as the active provider:
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
-# OR
-GOOGLE_API_KEY=your_google_gemini_api_key_here
-# OR
 GROQ_API_KEY=your_groq_api_key_here
 ```
+
+The project still preserves optional OpenAI and Google provider support through
+`modules/llm.py` when an explicit provider is passed to `get_llm()`.
 
 ### 6. Run Application
 ```bash
@@ -126,7 +125,6 @@ youtube-script-assistant/
 
 ---
 
-## 👥 Team Responsibilities
-
-- **Member 1 (AI / Backend Lead)**: LLM setup, LangChain integration, prompt engineering, script analysis/improvement/scene generation logic.
-- **Member 2 (UI / Frontend Lead)**: Streamlit UI construction, export engine integration, state management, UI testing.
+## 👥 Team 
+- Dhara Patel 
+- Hetvi Rabari 
