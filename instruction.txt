@@ -1,0 +1,732 @@
+Absolutely. For your **14-week Semester 7 project**, I’d structure it so that you first build a working MVP, then add the three advanced modules, and finally test/document everything.
+
+# 14-Week Project Plan
+
+### YouTube Script Writing Assistant Using LangChain & Streamlit
+
+**Complete Flow:**
+
+> **User Topic → Generate Title & Script → Analyze Script → Improve Script → Generate Scene Breakdown → Generate Description/Tags/Hashtags → Export**
+
+---
+
+## Module 1 — Project Planning & Requirement Analysis
+
+### **Week 1**
+
+**Goal:** Understand exactly what the system needs to do before development starts.
+
+### Tasks
+
+* Finalize project title and problem statement.
+* Define the target users: YouTube creators/content creators.
+* Study existing AI script-generation tools.
+* Identify limitations of existing solutions.
+* Finalize core and advanced features.
+* Define functional and non-functional requirements.
+* Decide the LLM/API to use.
+* Decide the technology stack:
+
+  * Python
+  * LangChain
+  * Streamlit
+  * LLM API
+  * Git/GitHub
+* Prepare initial project architecture.
+* Divide responsibilities between the 2 team members.
+
+### Deliverables
+
+* Problem statement
+* Objectives
+* Requirements document
+* Technology stack
+* Initial system architecture
+* Team responsibility document
+
+---
+
+# Module 2 — Environment Setup & LLM Integration
+
+### **Week 2**
+
+**Goal:** Create the basic project and successfully communicate with the LLM.
+
+### Tasks
+
+* Install Python and required packages.
+* Create project folder structure.
+* Set up virtual environment.
+* Configure API key securely using `.env`.
+* Set up LangChain.
+* Connect LangChain with selected LLM.
+* Send basic prompts to the model.
+* Test different prompts and responses.
+* Create basic error handling.
+
+### Example
+
+```text
+User Input
+    ↓
+Python
+    ↓
+LangChain
+    ↓
+LLM
+    ↓
+Generated Response
+```
+
+### Deliverables
+
+* Working Python environment
+* LLM connection
+* Basic LangChain implementation
+* Secure API configuration
+* Initial Git repository
+
+---
+
+# Module 3 — Prompt Engineering & Prompt Templates
+
+### **Week 3**
+
+**Goal:** Build high-quality prompts for consistent YouTube content generation.
+
+### Tasks
+
+Create prompt templates for:
+
+1. Title generation
+2. Script generation
+3. Hook generation
+4. Script analysis
+5. Script improvement
+6. Scene breakdown
+7. Description generation
+8. Tags/keywords generation
+9. Hashtag generation
+
+### User parameters
+
+Allow the user to specify:
+
+* Topic
+* Target audience
+* Tone
+* Video length
+* Content style
+
+### Example
+
+```text
+Topic: Artificial Intelligence
+Audience: College Students
+Tone: Educational
+Length: 5 minutes
+Style: Engaging
+```
+
+### Deliverables
+
+* Prompt template collection
+* Tested prompts
+* Standard output format
+* Prompt engineering documentation
+
+---
+
+# Module 4 — Streamlit UI & User Input Module
+
+### **Week 4**
+
+**Goal:** Build the main user interface.
+
+### UI should contain
+
+```text
+YouTube Script Writing Assistant
+
+Topic:
+[________________________]
+
+Target Audience:
+[ College Students ▼ ]
+
+Tone:
+[ Educational ▼ ]
+
+Video Length:
+[ 5 Minutes ▼ ]
+
+Content Style:
+[ Engaging ▼ ]
+
+        [ Generate Content ]
+```
+
+### Tasks
+
+* Create Streamlit application.
+* Create input fields.
+* Add dropdowns/select boxes.
+* Add buttons.
+* Create session state.
+* Design basic result pages/sections.
+* Add loading indicators.
+* Handle empty/invalid input.
+
+### Deliverables
+
+* Working Streamlit interface
+* User input module
+* Basic navigation/layout
+
+---
+
+# Module 5 — AI Title & Script Generation
+
+### **Week 5**
+
+**Goal:** Implement the main/core functionality.
+
+### Tasks
+
+#### Title Generator
+
+Generate relevant titles based on:
+
+* Topic
+* Audience
+* Tone
+* Content style
+
+#### Script Generator
+
+Generate a structured script containing:
+
+1. Title
+2. Hook
+3. Introduction
+4. Main content
+5. Examples
+6. Conclusion
+7. Call-to-action
+
+### Example
+
+```text
+TITLE
+   ↓
+HOOK
+   ↓
+INTRODUCTION
+   ↓
+MAIN CONTENT
+   ↓
+EXAMPLES
+   ↓
+CONCLUSION
+   ↓
+CTA
+```
+
+### Deliverables
+
+* AI title generator
+* AI script generator
+* Structured script output
+* First working MVP
+
+---
+
+# Module 6 — Conversation History & Regenerate
+
+### **Week 6**
+
+**Goal:** Allow users to interact with and refine generated content.
+
+### Tasks
+
+Implement:
+
+* Chat history
+* Previous prompts
+* Previous responses
+* Context-aware modifications
+* Regenerate script
+* Shorten script
+* Expand script
+* Change tone
+* Improve introduction
+* Add examples
+
+### Example
+
+User:
+
+> "Make the introduction more engaging."
+
+AI:
+
+> Generates a revised introduction based on the previous script.
+
+### Deliverables
+
+* Conversation history
+* Context-aware interaction
+* Regeneration functionality
+* Working MVP completed
+
+---
+
+# Module 7 — Advanced Feature 1: AI Script Analyzer
+
+### **Week 7**
+
+**Goal:** Make the application capable of evaluating generated scripts.
+
+### Analyzer should check
+
+* Hook quality
+* Script structure
+* Audience suitability
+* Tone consistency
+* Repetition
+* Engagement
+* CTA
+* Clarity
+* Approximate reading time
+
+### Example output
+
+```text
+SCRIPT ANALYSIS
+
+Hook:           Good
+Structure:      Good
+Audience Fit:   Excellent
+Repetition:     Low
+CTA:            Missing
+
+Suggestions:
+• Add a stronger hook
+• Add one real-world example
+• Add a CTA at the end
+```
+
+### Deliverables
+
+* Script analyzer
+* Analysis prompt
+* Structured analysis output
+* Improvement suggestions
+
+---
+
+# Module 8 — Advanced Feature 1: Improve Script
+
+### **Week 8**
+
+**Goal:** Connect the analyzer with automatic script improvement.
+
+### Workflow
+
+```text
+Generated Script
+      ↓
+AI Analyzer
+      ↓
+Problems/Suggestions
+      ↓
+Improvement Prompt
+      ↓
+Improved Script
+```
+
+### Tasks
+
+* Create improvement prompt.
+* Pass analysis results to improvement module.
+* Generate revised script.
+* Allow user to compare original and improved versions.
+* Add **Improve Script** button.
+* Test multiple types of improvements.
+
+### Deliverables
+
+* Automatic script improvement
+* Original vs improved script
+* Improvement workflow
+
+---
+
+# Module 9 — Advanced Feature 2: Scene-wise Script Breakdown
+
+### **Week 9**
+
+**Goal:** Convert the script into a practical video-production plan.
+
+### Each scene should contain
+
+* Scene number
+* Approximate duration
+* Voiceover
+* Visual suggestion
+* On-screen text
+
+### Example
+
+| Scene |  Duration | Voiceover        | Visual                    |
+| ----- | --------: | ---------------- | ------------------------- |
+| 1     | 0:00–0:15 | Hook             | Attention-grabbing visual |
+| 2     | 0:15–0:45 | Introduction     | Topic-related footage     |
+| 3     | 0:45–2:00 | Main explanation | Relevant graphics         |
+| 4     | 2:00–3:00 | Example          | Demonstration             |
+| 5     | 3:00–3:30 | Conclusion       | Summary/CTA               |
+
+### Deliverables
+
+* Scene breakdown generator
+* Structured scene output
+* Duration estimation
+* Visual suggestions
+
+---
+
+# Module 10 — Advanced Feature 3: YouTube Content Package
+
+### **Week 10**
+
+**Goal:** Generate all important supporting content for publishing the video.
+
+### Generate
+
+* Video description
+* Keywords
+* Tags
+* Hashtags
+* CTA
+
+### Complete output
+
+```text
+TITLE
+HOOK
+SCRIPT
+DESCRIPTION
+KEYWORDS
+TAGS
+HASHTAGS
+CTA
+```
+
+### Example
+
+```text
+Keywords:
+AI, artificial intelligence, machine learning
+
+Hashtags:
+#AI #ArtificialIntelligence #Technology
+```
+
+### Deliverables
+
+* Description generator
+* Keyword generator
+* Tag generator
+* Hashtag generator
+* Complete content package
+
+---
+
+# Module 11 — Export Module
+
+### **Week 11**
+
+**Goal:** Allow users to save and download their generated content.
+
+### Export options
+
+* TXT
+* PDF
+* DOCX
+
+### Export should ideally contain
+
+```text
+Project Title
+
+Video Title
+
+Hook
+
+Full Script
+
+Script Analysis
+
+Improvement Suggestions
+
+Scene Breakdown
+
+Description
+
+Keywords
+
+Tags
+
+Hashtags
+
+CTA
+```
+
+### Tasks
+
+* Create export templates.
+* Implement download buttons.
+* Format PDF/DOCX properly.
+* Test exported files.
+
+### Deliverables
+
+* TXT export
+* PDF export
+* DOCX export
+* Complete content package download
+
+---
+
+# Module 12 — Integration & UI Improvement
+
+### **Week 12**
+
+**Goal:** Connect all modules into one smooth application.
+
+### Final application flow
+
+```text
+                 USER
+                   ↓
+              Enter Topic
+                   ↓
+        Select Preferences
+                   ↓
+         Generate Title/Script
+                   ↓
+          Analyze Script
+                   ↓
+          Improve Script
+                   ↓
+       Scene-wise Breakdown
+                   ↓
+       Description + Tags
+                   ↓
+             Export
+```
+
+### Tasks
+
+* Connect all modules.
+* Improve Streamlit layout.
+* Add tabs/sections.
+* Add session state.
+* Add loading indicators.
+* Add success/error messages.
+* Ensure outputs are stored correctly.
+* Remove unnecessary UI elements.
+
+### Deliverables
+
+* Fully integrated application
+* Improved UI/UX
+* Complete end-to-end workflow
+
+---
+
+# Module 13 — Testing, Debugging & Evaluation
+
+### **Week 13**
+
+**Goal:** Make the application stable and evaluate its output.
+
+### Testing areas
+
+#### Functional Testing
+
+Check whether:
+
+* Topic input works.
+* Title generation works.
+* Script generation works.
+* Analysis works.
+* Improvement works.
+* Scene breakdown works.
+* Description/tags work.
+* Export works.
+
+#### AI Output Testing
+
+Test different topics:
+
+```text
+Technology
+Education
+Gaming
+Travel
+Finance
+Health
+Entertainment
+```
+
+Test different:
+
+* Tones
+* Audiences
+* Video lengths
+* Content styles
+
+### Error Testing
+
+Test:
+
+* Empty topic
+* Very long topic
+* API failure
+* Invalid input
+* Network failure
+* Missing API key
+
+### Deliverables
+
+* Test cases
+* Test results
+* Bug fixes
+* Performance observations
+* Final stable version
+
+---
+
+# Module 14 — Documentation, Presentation & Final Demo
+
+### **Week 14**
+
+**Goal:** Prepare everything required for your Semester 7 submission.
+
+### Documentation
+
+Prepare:
+
+1. Abstract
+2. Introduction
+3. Problem Statement
+4. Existing System
+5. Limitations of Existing System
+6. Proposed System
+7. Objectives
+8. Functional Requirements
+9. Non-functional Requirements
+10. System Architecture
+11. Technology Stack
+12. Methodology
+13. Module Description
+14. Implementation
+15. Screenshots
+16. Testing
+17. Results
+18. Limitations
+19. Future Scope
+20. Conclusion
+21. References
+
+### Presentation
+
+Prepare slides covering:
+
+* Problem
+* Proposed solution
+* Project workflow
+* Architecture
+* Technologies
+* Core features
+* Advanced features
+* Demo
+* Results
+* Future scope
+
+### Viva Preparation
+
+Be ready to explain:
+
+* What is Generative AI?
+* What is an LLM?
+* What is LangChain?
+* Why use LangChain?
+* What is prompt engineering?
+* Why Streamlit?
+* How does conversation history work?
+* How does your script analyzer work?
+* How does scene breakdown work?
+* How are titles/scripts generated?
+* What are the limitations of LLMs?
+* What happens if the API fails?
+* What are your future improvements?
+
+### Final Deliverables
+
+**Working application + source code + project report + presentation + demo + test documentation**
+
+---
+
+# 👥 2-Member Team Responsibility
+
+To avoid both members doing random parts, divide the project into **AI/Backend** and **UI/Integration**, while both participate in testing and documentation.
+
+| Week | Member 1 – AI/Backend      | Member 2 – UI/Integration       |
+| ---- | -------------------------- | ------------------------------- |
+| 1    | Requirements & AI research | Requirements & UI research      |
+| 2    | LLM + LangChain setup      | Project structure + Git         |
+| 3    | Prompt engineering         | UI planning                     |
+| 4    | Backend integration        | Streamlit UI                    |
+| 5    | Title & script generation  | Output display/UI               |
+| 6    | Conversation logic         | Chat interface                  |
+| 7    | Script analyzer            | Analyzer UI                     |
+| 8    | Improvement logic          | Original/improved comparison UI |
+| 9    | Scene breakdown            | Scene display/table             |
+| 10   | Description/Tags/Hashtags  | Content package UI              |
+| 11   | Export data preparation    | PDF/DOCX/TXT download           |
+| 12   | Module integration         | Complete UI/UX integration      |
+| 13   | AI/output testing          | Functional/UI testing           |
+| 14   | Technical documentation    | Report, PPT & presentation      |
+
+**Both members:** final debugging, testing, report review, and viva preparation.
+
+---
+
+# 🗓️ Overall 14-Week Roadmap
+
+```text
+WEEK 1   → Planning & Requirements
+WEEK 2   → Environment + LLM Setup
+WEEK 3   → Prompt Engineering
+WEEK 4   → Streamlit UI
+WEEK 5   → Title + Script Generation
+WEEK 6   → Conversation History + Regenerate
+WEEK 7   → AI Script Analyzer
+WEEK 8   → Improve Script
+WEEK 9   → Scene-wise Breakdown
+WEEK 10  → Description + Tags + Hashtags
+WEEK 11  → Export
+WEEK 12  → Full Integration + UI
+WEEK 13  → Testing + Debugging
+WEEK 14  → Documentation + PPT + Final Demo
+```
+
+### Your final system will therefore have **10 core features + 3 major advanced modules**:
+
+**Core:** Topic, Audience, Tone, Length, Title, Script, Prompt Templates, Chat History, Regenerate/Improve, Streamlit UI.
+
+**Advanced:** **AI Script Analyzer + Scene-wise Breakdown + YouTube Content Package Generator.**
+
+This is a very manageable scope for **14 weeks and a 2-person team**, while still giving you enough technical material for a proper Semester 7 AIML project.
