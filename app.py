@@ -55,7 +55,7 @@ def initialize_session_state():
         "is_processing": False,
         "generation_status": "Ready for input",
         "generated_content": None,
-        # Week 6: Conversation History & Script Evolution State
+        # Conversation History & Script Evolution State
         "chat_history": [],
         "script_history": [],
         "active_script_version": 1,
@@ -161,7 +161,7 @@ def handle_generation():
         st.session_state.generated = True
         st.session_state.generation_status = "Content ready"
 
-        # Initialize Week 6 History
+        # Initialize Version & Chat History
         st.session_state.active_script_version = 1
         st.session_state.script_history = [
             {
@@ -378,7 +378,7 @@ def render_results():
         [
             "💡 Generated Titles",
             f"📜 Active Script (v{st.session_state.active_script_version})",
-            "💬 Interactive Refinement & Chat (Week 6)",
+            "💬 Interactive Refinement & Chat",
             "🕰️ Version History",
             "ℹ️ Parameters & Metadata",
         ]
