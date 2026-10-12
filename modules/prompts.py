@@ -257,3 +257,197 @@ METADATA_PROMPT = PromptTemplate(
     input_variables=["topic", "title", "script"],
     template=METADATA_PROMPT_TEMPLATE
 )
+
+
+# ==========================================
+# 9. Context-Aware Conversational Refinement Prompt (Week 6)
+# ==========================================
+CONTEXT_REFINEMENT_PROMPT_TEMPLATE = """You are an expert YouTube script writing assistant and video producer.
+
+You are collaborating interactively with a content creator to refine and improve their YouTube video script.
+
+CURRENT ACTIVE SCRIPT:
+=== SCRIPT START ===
+{current_script}
+=== SCRIPT END ===
+
+PREVIOUS CONVERSATION HISTORY:
+{conversation_history}
+
+USER REVISION REQUEST:
+"{user_instruction}"
+
+ADDITIONAL CONTEXT / PREFERENCES:
+- Topic: {topic}
+- Target Audience: {audience}
+- Tone: {tone}
+
+INSTRUCTIONS:
+1. Carefully analyze what the user is asking to modify (e.g., make intro punchier, shorten section, add humor, add examples, explain a concept differently, etc.).
+2. Apply the requested changes contextually while preserving the overall continuity and valuable insights of the script.
+3. Keep spoken dialogue conversational and retain visual/audio cues like [Visual: ...] or [Sound Effect: ...].
+4. Return:
+   - A brief 1-2 sentence summary of what was updated.
+   - Followed by the updated script (or the specifically requested revised section, or full script if comprehensive changes were requested) clearly delimited.
+"""
+
+CONTEXT_REFINEMENT_PROMPT = PromptTemplate(
+    input_variables=["current_script", "conversation_history", "user_instruction", "topic", "audience", "tone"],
+    template=CONTEXT_REFINEMENT_PROMPT_TEMPLATE
+)
+
+
+# ==========================================
+# 10. Regenerate Full Script Prompt (Week 6)
+# ==========================================
+REGENERATE_SCRIPT_PROMPT_TEMPLATE = """You are a top-tier YouTube scriptwriter.
+
+The user wants a completely fresh, alternative take on their YouTube video script.
+Explore a different creative angle, fresh hook, and unique examples while keeping the core preferences:
+
+Topic: {topic}
+Target Audience: {audience}
+Tone: {tone}
+Video Length: {length}
+Content Style: {style}
+
+Structure the script cleanly:
+1. [TITLE SUGGESTION]
+2. [HOOK] (0:00 - 0:30)
+3. [INTRODUCTION]
+4. [MAIN CONTENT] (With [Visual: ...] cues)
+5. [PRACTICAL EXAMPLES / DEMO]
+6. [CONCLUSION & RECAP]
+7. [CALL-TO-ACTION & OUTRO]
+
+Requirements:
+- Ensure this is a distinct, fresh creative perspective from common clichés.
+- High retention, punchy delivery, natural spoken cadence.
+"""
+
+REGENERATE_SCRIPT_PROMPT = PromptTemplate(
+    input_variables=["topic", "audience", "tone", "length", "style"],
+    template=REGENERATE_SCRIPT_PROMPT_TEMPLATE
+)
+
+
+# ==========================================
+# 11. Quick Modification: Shorten Script Prompt (Week 6)
+# ==========================================
+SHORTEN_SCRIPT_PROMPT_TEMPLATE = """You are an expert YouTube editor specializing in fast pacing and retention.
+
+Shorten and condense the following YouTube script:
+
+=== CURRENT SCRIPT ===
+{script}
+=== END SCRIPT ===
+
+Requirements:
+- Reduce the word count by approximately 25-35%.
+- Remove all fluff, unnecessary repetition, and slow explanations.
+- Keep the hook sharp and retain the core takeaways and CTA.
+- Keep the spoken delivery fast, punchy, and engaging.
+- Return the full revised, condensed script with production cues.
+"""
+
+SHORTEN_SCRIPT_PROMPT = PromptTemplate(
+    input_variables=["script"],
+    template=SHORTEN_SCRIPT_PROMPT_TEMPLATE
+)
+
+
+# ==========================================
+# 12. Quick Modification: Expand Script Prompt (Week 6)
+# ==========================================
+EXPAND_SCRIPT_PROMPT_TEMPLATE = """You are an expert YouTube scriptwriter specializing in deep-dive educational content.
+
+Expand and elaborate on the following YouTube script:
+
+=== CURRENT SCRIPT ===
+{script}
+=== END SCRIPT ===
+
+Requirements:
+- Add more depth, richer explanations, analogies, and detailed points.
+- Increase the depth of the main content points without adding empty filler.
+- Include additional production/visual cues [Visual: ...] to maintain visual interest across the longer video.
+- Return the full expanded script.
+"""
+
+EXPAND_SCRIPT_PROMPT = PromptTemplate(
+    input_variables=["script"],
+    template=EXPAND_SCRIPT_PROMPT_TEMPLATE
+)
+
+
+# ==========================================
+# 13. Quick Modification: Change Tone Prompt (Week 6)
+# ==========================================
+CHANGE_TONE_PROMPT_TEMPLATE = """You are a versatile YouTube scriptwriter.
+
+Rewrite the following YouTube script to adopt a new tone:
+TARGET TONE: {target_tone}
+
+=== CURRENT SCRIPT ===
+{script}
+=== END SCRIPT ===
+
+Requirements:
+- Adapt the vocabulary, sentence cadence, humor level, and energy to authentically match the target tone: {target_tone}.
+- Keep all factual information, core structure, and main points intact.
+- Return the complete rewritten script in the new tone.
+"""
+
+CHANGE_TONE_PROMPT = PromptTemplate(
+    input_variables=["script", "target_tone"],
+    template=CHANGE_TONE_PROMPT_TEMPLATE
+)
+
+
+# ==========================================
+# 14. Quick Modification: Improve Hook & Intro Prompt (Week 6)
+# ==========================================
+IMPROVE_INTRO_PROMPT_TEMPLATE = """You are an elite YouTube retention specialist.
+
+The first 30 seconds of a YouTube video make or break viewer retention.
+Rewrite and supercharge the [HOOK] and [INTRODUCTION] of the following script:
+
+=== CURRENT SCRIPT ===
+{script}
+=== END SCRIPT ===
+
+Requirements:
+- Create an irresistible opening hook (curiosity gap, high-stakes question, or shocking fact).
+- Set clear payoff expectations in the introduction within 15-20 seconds.
+- Provide vivid visual & sound effect cues in brackets [Visual: ...], [SFX: ...].
+- Output the full script with the newly enhanced Hook and Introduction integrated seamlessly.
+"""
+
+IMPROVE_INTRO_PROMPT = PromptTemplate(
+    input_variables=["script"],
+    template=IMPROVE_INTRO_PROMPT_TEMPLATE
+)
+
+
+# ==========================================
+# 15. Quick Modification: Add Examples Prompt (Week 6)
+# ==========================================
+ADD_EXAMPLES_PROMPT_TEMPLATE = """You are an expert YouTube content creator.
+
+Enhance the following YouTube script by adding concrete, relatable real-world examples, case studies, or step-by-step demonstrations:
+
+=== CURRENT SCRIPT ===
+{script}
+=== END SCRIPT ===
+
+Requirements:
+- Weave in 2-3 specific, illustrative real-world examples or scenarios into the main content.
+- Ensure the examples make abstract concepts immediately understandable and interesting to viewers.
+- Return the full updated script with the new examples seamlessly integrated.
+"""
+
+ADD_EXAMPLES_PROMPT = PromptTemplate(
+    input_variables=["script"],
+    template=ADD_EXAMPLES_PROMPT_TEMPLATE
+)
+
