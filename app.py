@@ -7,6 +7,13 @@ from modules.conversation import (
     regenerate_script_alternative,
     modify_script_quick,
 )
+from modules.script_analyzer import (
+    DEFAULT_SPEAKING_RATE_WPM,
+    ScriptAnalysisError,
+    analysis_is_current,
+    analyze_script,
+    script_fingerprint,
+)
 
 st.set_page_config(
     page_title="YouTube Script Writing Assistant",
@@ -59,6 +66,9 @@ def initialize_session_state():
         "chat_history": [],
         "script_history": [],
         "active_script_version": 1,
+        "analysis_result": None,
+        "analysis_script_hash": None,
+        "analysis_script_version": None,
     }
 
     for key, value in defaults.items():
@@ -79,6 +89,98 @@ def reset_session_state():
     st.session_state.chat_history = []
     st.session_state.script_history = []
     st.session_state.active_script_version = 1
+    clear_analysis_state()
+
+
+def clear_analysis_state():
+    """Remove analysis tied to an earlier script draft."""
+    st.session_state.analysis_result = None
+    st.session_state.analysis_script_hash = None
+    st.session_state.analysis_script_version = None
+
+
+def handle_analysis():
+    """Analyze the active script only when the user explicitly requests it."""
+    generated_content = st.session_state.generated_content
+    script = generated_content.get("script", "").strip() if generated_content else ""
+    if not script:
+        st.warning("Generate or select a script before analyzing it.")
+        return
+
+    preferences = {
+        "topic": st.session_state.topic,
+        "audience": st.session_state.audience,
+        "tone": st.session_state.tone,
+        "length": st.session_state.video_length,
+        "style": st.session_state.content_style,
+    }
+    try:
+        with st.spinner("Analyzing the active script..."):
+            result = analyze_script(
+                script=script,
+                preferences=preferences,
+                speaking_rate_wpm=DEFAULT_SPEAKING_RATE_WPM,
+                llm=get_llm(temperature=0.2),
+            )
+        st.session_state.analysis_result = result
+        st.session_state.analysis_script_hash = script_fingerprint(script)
+        st.session_state.analysis_script_version = st.session_state.active_script_version
+        st.success("Script analysis completed.")
+    except (ScriptAnalysisError, ValueError) as error:
+        clear_analysis_state()
+        st.error(f"Script analysis could not be completed: {error}")
+    except Exception as error:
+        clear_analysis_state()
+        st.error(f"Script analysis failed unexpectedly: {error}")
+
+
+def render_analysis(result):
+    """Render the validated analysis payload in a compact, readable layout."""
+    st.caption(
+        "Scores are AI-assisted estimates, not objective scientific measurements. "
+        "Each criterion uses 0-10; the overall score is their average converted to 0-100."
+    )
+    score_col, word_col, time_col = st.columns(3)
+    score_col.metric("Overall Quality", f"{result['overall_score']:.1f}/100")
+    word_col.metric("Word Count", f"{result['word_count']}")
+    time_col.metric(
+        "Estimated Reading Time",
+        f"{result['estimated_reading_time_minutes']:.2f} min",
+    )
+
+    st.markdown(f"**Overall assessment:** {result['overall_summary']}")
+    st.markdown("### Criterion evaluations")
+    for criterion in result["criteria"]:
+        score = float(criterion["score"])
+        with st.expander(
+            f"{criterion['criterion']} — {score:.1f}/10 ({criterion['rating']})"
+        ):
+            st.progress(int(round(score * 10)))
+            st.write(criterion["explanation"])
+            st.info(f"Suggested action: {criterion['suggestion']}")
+
+    strengths_col, missing_col = st.columns(2)
+    with strengths_col:
+        st.markdown("### Strengths")
+        if result["strengths"]:
+            for strength in result["strengths"]:
+                st.markdown(f"- {strength}")
+        else:
+            st.write("No strengths were returned.")
+    with missing_col:
+        st.markdown("### Missing elements")
+        if result["missing_elements"]:
+            for element in result["missing_elements"]:
+                st.markdown(f"- {element}")
+        else:
+            st.write("No important missing elements were identified.")
+
+    st.markdown("### Prioritized improvement suggestions")
+    if result["improvement_suggestions"]:
+        for index, suggestion in enumerate(result["improvement_suggestions"], 1):
+            st.markdown(f"{index}. {suggestion}")
+    else:
+        st.write("No improvement suggestions were returned.")
 
 
 def validate_topic(topic: str):
@@ -109,6 +211,7 @@ def handle_generation():
     if validation_error:
         st.session_state.generated = False
         st.session_state.generated_content = None
+        clear_analysis_state()
         st.session_state.generation_status = "Input validation failed"
         st.error(validation_error)
         return
@@ -158,6 +261,7 @@ def handle_generation():
                 f"Content style: {preferences['style']}"
             ),
         }
+        clear_analysis_state()
         st.session_state.generated = True
         st.session_state.generation_status = "Content ready"
 
@@ -184,6 +288,7 @@ def handle_generation():
     except Exception as error:
         st.session_state.generated = False
         st.session_state.generated_content = None
+        clear_analysis_state()
         st.session_state.generation_status = "Generation failed"
         st.error(f"Something went wrong: {error}")
     finally:
@@ -223,6 +328,7 @@ def handle_quick_modification(action_type: str, custom_param: str = None):
         new_version = st.session_state.active_script_version + 1
         st.session_state.active_script_version = new_version
         st.session_state.generated_content["script"] = clean_revised
+        clear_analysis_state()
 
         st.session_state.script_history.append({
             "version": new_version,
@@ -270,6 +376,7 @@ def handle_regenerate_full_script():
         new_version = st.session_state.active_script_version + 1
         st.session_state.active_script_version = new_version
         st.session_state.generated_content["script"] = clean_new
+        clear_analysis_state()
 
         st.session_state.script_history.append({
             "version": new_version,
@@ -331,6 +438,7 @@ def handle_chat_user_prompt(user_text: str):
             new_version = st.session_state.active_script_version + 1
             st.session_state.active_script_version = new_version
             st.session_state.generated_content["script"] = clean_reply
+            clear_analysis_state()
             st.session_state.script_history.append({
                 "version": new_version,
                 "label": f"v{new_version}: Chat Refinement ('{user_text[:30]}...')",
@@ -348,6 +456,7 @@ def restore_version(version_entry):
     """Restores an earlier script draft from version history."""
     st.session_state.generated_content["script"] = version_entry["script"]
     st.session_state.active_script_version = version_entry["version"]
+    clear_analysis_state()
     st.session_state.chat_history.append({
         "role": "assistant",
         "content": f"⏪ Restored script to **Version {version_entry['version']}** ({version_entry['label']}).",
@@ -374,10 +483,11 @@ def render_results():
 
     st.divider()
 
-    title_tab, script_tab, refine_tab, history_tab, info_tab = st.tabs(
+    title_tab, script_tab, analyzer_tab, refine_tab, history_tab, info_tab = st.tabs(
         [
             "💡 Generated Titles",
             f"📜 Active Script (v{st.session_state.active_script_version})",
+            "🔍 AI Script Analyzer",
             "💬 Interactive Refinement & Chat",
             "🕰️ Version History",
             "ℹ️ Parameters & Metadata",
@@ -397,6 +507,32 @@ def render_results():
             mime="text/plain",
             use_container_width=False,
         )
+
+    with analyzer_tab:
+        st.markdown("### 🔍 AI Script Analyzer")
+        st.caption(
+            "Analyze the active script against your selected audience, tone, length, and style. "
+            "Analysis runs only when you click the button."
+        )
+        if st.button("Analyze Script", type="primary", use_container_width=True):
+            handle_analysis()
+
+        analysis_result = st.session_state.analysis_result
+        if analysis_result and analysis_is_current(
+            analysis_result,
+            st.session_state.analysis_script_hash,
+            st.session_state.analysis_script_version,
+            current_script,
+            st.session_state.active_script_version,
+        ):
+            render_analysis(analysis_result)
+        elif analysis_result:
+            st.warning(
+                "This analysis belongs to an older script version. "
+                "Click **Analyze Script** to analyze the active draft."
+            )
+        else:
+            st.info("Click **Analyze Script** to evaluate the active draft.")
 
     with refine_tab:
         st.markdown("### ⚡ Quick Script Modifications")

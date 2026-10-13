@@ -106,34 +106,71 @@ SCRIPT_PROMPT = PromptTemplate(
 
 
 # ==========================================
-# 4. Script Analyzer Prompt
+# 4. Script Analyzer Prompt (Week 7)
 # ==========================================
 ANALYZER_PROMPT_TEMPLATE = """You are a senior YouTube content consultant and retention analyst.
 
-Thoroughly analyze the following YouTube video script:
+Analyze only the supplied script. Do not rewrite it and do not use a sample script.
+
+Context:
+- Topic: {topic}
+- Target audience: {audience}
+- Requested tone: {tone}
+- Requested video length: {video_length}
+- Content style: {content_style}
+- Python-calculated word count: {word_count}
+- Python-calculated estimated reading time in minutes: {estimated_reading_time_minutes}
 
 === SCRIPT START ===
 {script}
 === SCRIPT END ===
 
-Evaluate the script across 8 core metrics:
-1. Hook Quality (Does it grab attention in the first 10 seconds?)
-2. Structure & Pacing (Does the flow logical without drag?)
-3. Audience Fit (Is the vocabulary and depth suited for the intended viewer?)
-4. Tone Consistency (Is the tone steady throughout?)
-5. Clarity & Understandability (Are complex ideas explained simply?)
-6. Engagement & Visual Variety (Are visual/audio cues used effectively?)
-7. Repetition & Fluff Check (Is there unnecessary filler?)
-8. Call-to-Action (CTA) Strength (Is the ending action clear and compelling?)
+Evaluate exactly these nine criteria:
+1. Hook Quality
+2. Script Structure
+3. Audience Suitability
+4. Tone Consistency
+5. Repetition
+6. Engagement
+7. Call-to-Action (CTA)
+8. Clarity
+9. Approximate Reading Time
 
-Output Format:
-- Provide a summary table with Ratings for each metric (Poor / Fair / Good / Excellent) and a 1-sentence rationale.
-- List 3 major Strengths of the script.
-- List 5 actionable, high-impact Improvement Recommendations.
+Return ONLY one valid JSON object. Do not wrap it in Markdown fences. Use this exact shape:
+{{
+  "overall_score": 0,
+  "overall_summary": "concise assessment",
+  "criteria": [
+    {{
+      "criterion": "Hook Quality",
+      "score": 0,
+      "rating": "Poor",
+      "explanation": "evidence from this script",
+      "suggestion": "specific action for this script"
+    }}
+  ],
+  "strengths": ["specific strength"],
+  "improvement_suggestions": ["highest-priority actionable suggestion"],
+  "missing_elements": ["important element absent from this script"]
+}}
+
+Use a 0-10 score for every criterion and a rating such as Poor, Fair, Good, or Excellent.
+The application calculates word count, reading time, and the overall score in Python.
+Mention a missing CTA in missing_elements only when this script truly lacks a CTA.
+Recommendations must refer to evidence in the supplied script, not generic advice.
 """
 
 ANALYZER_PROMPT = PromptTemplate(
-    input_variables=["script"],
+    input_variables=[
+        "script",
+        "topic",
+        "audience",
+        "tone",
+        "video_length",
+        "content_style",
+        "word_count",
+        "estimated_reading_time_minutes",
+    ],
     template=ANALYZER_PROMPT_TEMPLATE
 )
 
@@ -450,4 +487,3 @@ ADD_EXAMPLES_PROMPT = PromptTemplate(
     input_variables=["script"],
     template=ADD_EXAMPLES_PROMPT_TEMPLATE
 )
-

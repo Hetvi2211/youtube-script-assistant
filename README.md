@@ -108,7 +108,7 @@ youtube-script-assistant/
 │   ├── llm.py                  # LLM setup & provider initialization
 │   ├── prompts.py              # Prompt template definitions
 │   ├── script_generator.py     # Script & Title chains
-│   ├── script_analyzer.py      # Script analysis chain
+│   ├── script_analyzer.py      # Validated Week 7 script analysis chain
 │   ├── script_improver.py      # Script refinement chain
 │   ├── scene_generator.py      # Scene breakdown chain
 │   ├── content_generator.py    # Description, tags & metadata chain
@@ -122,6 +122,78 @@ youtube-script-assistant/
 ├── requirements.txt            # Dependency list
 └── README.md                   # Project Overview & Setup Guide
 ```
+
+## 📊 Week 7: AI Script Analyzer
+
+The Week 7 analyzer evaluates the currently active generated or edited script.
+It does not analyze a sample script and it does not rewrite the script.
+
+### Analyzer objectives and criteria
+
+After the user clicks **Analyze Script**, the app sends the active script to
+the existing LangChain LLM factory with the selected topic, audience, tone,
+video length, and content style. The response is validated as structured JSON
+and evaluated across:
+
+1. Hook quality
+2. Script structure
+3. Audience suitability
+4. Tone consistency
+5. Repetition
+6. Engagement
+7. Call-to-action (CTA)
+8. Clarity
+9. Approximate reading time
+
+The analyzer calculates word count and estimated narration time in Python at
+the configurable default rate of 140 words per minute. Individual criteria use
+a 0-10 scale. The overall score is the arithmetic mean of the nine criterion
+scores, converted to 0-100; it is an AI-assisted estimate, not an objective
+scientific measurement.
+
+### Using the analyzer
+
+1. Start the app with `streamlit run app.py`.
+2. Enter a topic and preferences, then select **Generate Content**.
+3. Open the **AI Script Analyzer** tab and select **Analyze Script**.
+4. Review the overall score, assessment, criterion explanations, strengths,
+   missing elements, and prioritized suggestions.
+5. If the script is regenerated, edited, or restored, analyze it again. Older
+   results are cleared and are never displayed as belonging to the new draft.
+
+### Analysis output shape
+
+The reusable `modules/script_analyzer.py` function returns a JSON-compatible
+dictionary:
+
+```text
+{
+  overall_score: number,
+  overall_summary: string,
+  criteria: [{criterion, score, rating, explanation, suggestion}],
+  strengths: [string],
+  improvement_suggestions: [string],
+  missing_elements: [string],
+  word_count: integer,
+  estimated_reading_time_minutes: number
+}
+```
+
+Malformed or incomplete LLM JSON, unsupported responses, missing API
+configuration, and provider/network failures produce an explicit user-facing
+error. The analyzer never invents a successful fallback report.
+
+### Week 7 tests
+
+Week 7 tests use mocked LangChain responses and do not consume API credits:
+
+```bash
+python -m unittest -v test_script_analyzer.py
+```
+
+The suite covers strong and weak hooks, missing CTAs, repetition, empty and
+short scripts, different preferences, malformed output, LLM failure, and
+stale analysis after regeneration.
 
 ---
 

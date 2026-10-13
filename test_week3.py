@@ -14,6 +14,7 @@ Tests all 8 prompt templates and chains:
 
 import sys
 import os
+import json
 from dotenv import load_dotenv
 
 if sys.stdout.encoding != 'utf-8':
@@ -99,13 +100,14 @@ def run_week3_pipeline_test():
     # Step 4: Script Analysis
     print("--- [4/8] Testing Script Analyzer Prompt ---")
     analysis_output = analyze_script(script=script_output, llm=llm)
-    print(analysis_output[:350] + "...\n")
+    analysis_text = json.dumps(analysis_output, indent=2)
+    print(analysis_text[:350] + "...\n")
 
     # Step 5: Script Improvement
     print("--- [5/8] Testing Script Improvement Prompt ---")
     improved_script_output = improve_script(
         original_script=script_output,
-        analysis=analysis_output,
+        analysis=analysis_text,
         user_feedback="Add a sharper hook and extra emphasis on early diagnosis benefits.",
         llm=llm
     )
