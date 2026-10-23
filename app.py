@@ -14,6 +14,11 @@ from modules.script_analyzer import (
     analyze_script,
     script_fingerprint,
 )
+from modules.script_improver import (
+    ScriptImprovementError,
+    compare_scripts,
+    improve_script,
+)
 
 st.set_page_config(
     page_title="YouTube Script Writing Assistant",
@@ -69,6 +74,9 @@ def initialize_session_state():
         "analysis_result": None,
         "analysis_script_hash": None,
         "analysis_script_version": None,
+        # Week 8: Automatic Script Improvement State
+        "improvement_result": None,
+        "improvement_script_version": None,
     }
 
     for key, value in defaults.items():
@@ -93,10 +101,12 @@ def reset_session_state():
 
 
 def clear_analysis_state():
-    """Remove analysis tied to an earlier script draft."""
+    """Remove analysis and pending improvements tied to an earlier script draft."""
     st.session_state.analysis_result = None
     st.session_state.analysis_script_hash = None
     st.session_state.analysis_script_version = None
+    st.session_state.improvement_result = None
+    st.session_state.improvement_script_version = None
 
 
 def handle_analysis():
@@ -183,7 +193,168 @@ def render_analysis(result):
         st.write("No improvement suggestions were returned.")
 
 
+def handle_improvement(improvement_focus: str, custom_feedback: str = ""):
+    """Generate an improved script by connecting the analyzer results to the improver module."""
+    generated_content = st.session_state.generated_content
+    script = generated_content.get("script", "").strip() if generated_content else ""
+    if not script:
+        st.warning("Generate or select a script before improving it.")
+        return
+
+    analysis_result = st.session_state.analysis_result
+    if not analysis_result:
+        st.warning("Please analyze the script first before running automatic improvement.")
+        return
+
+    preferences = {
+        "topic": st.session_state.topic,
+        "audience": st.session_state.audience,
+        "tone": st.session_state.tone,
+        "length": st.session_state.video_length,
+        "style": st.session_state.content_style,
+    }
+
+    try:
+        with st.spinner("Applying AI improvements based on script analysis..."):
+            result = improve_script(
+                original_script=script,
+                analysis=analysis_result,
+                user_feedback=custom_feedback,
+                preferences=preferences,
+                improvement_focus=improvement_focus,
+                llm=get_llm(temperature=0.4),
+            )
+        st.session_state.improvement_result = result.to_dict()
+        st.session_state.improvement_script_version = st.session_state.active_script_version
+        st.success("Improved script draft generated! Compare with the original below.")
+        st.rerun()
+    except (ScriptImprovementError, ValueError) as error:
+        st.error(f"Script improvement could not be completed: {error}")
+    except Exception as error:
+        st.error(f"Script improvement failed unexpectedly: {error}")
+
+
+def render_improvement_comparison(imp: dict):
+    """Render side-by-side comparison between the original and improved script versions."""
+    orig_script = imp.get("original_script", "")
+    improved_script = imp.get("improved_script", "")
+    summary_items = imp.get("summary_of_improvements", [])
+    diff = imp.get("diff_metrics", {})
+    focus = imp.get("improvement_focus", "All Analysis Recommendations")
+    orig_version = st.session_state.improvement_script_version or st.session_state.active_script_version
+
+    st.markdown("---")
+    st.markdown("### ⚖️ Script Comparison: Original vs. Improved Draft")
+    st.caption(f"Applied Focus: **{focus}**")
+
+    # Metrics comparison banner
+    m_col1, m_col2, m_col3 = st.columns(3)
+    orig_words = diff.get("original_word_count", len(orig_script.split()))
+    imp_words = diff.get("improved_word_count", len(improved_script.split()))
+    delta_w = diff.get("delta_words", imp_words - orig_words)
+    delta_w_sign = f"+{delta_w}" if delta_w > 0 else f"{delta_w}"
+
+    m_col1.metric("Word Count", f"{imp_words} words", delta=f"{delta_w_sign} words")
+
+    orig_time = diff.get("original_speaking_time_minutes", 0)
+    imp_time = diff.get("improved_speaking_time_minutes", 0)
+    delta_t = diff.get("delta_time_minutes", round(imp_time - orig_time, 2))
+    delta_t_sign = f"+{delta_t:.2f}m" if delta_t > 0 else f"{delta_t:.2f}m"
+
+    m_col2.metric("Est. Speaking Time", f"{imp_time:.2f} min", delta=delta_t_sign)
+    m_col3.metric("Candidate Status", f"Ready to Apply (v{orig_version + 1})")
+
+    # Summary of changes
+    if summary_items:
+        with st.expander("📋 Summary of AI Improvements Applied", expanded=True):
+            for item in summary_items:
+                st.markdown(f"- {item}")
+
+    # Side-by-side comparison
+    col_orig, col_imp = st.columns(2)
+    with col_orig:
+        st.markdown(f"#### 📜 Original Script (v{orig_version})")
+        st.text_area(
+            "Original Version",
+            value=orig_script,
+            height=420,
+            disabled=True,
+            key=f"orig_script_compare_{orig_version}",
+        )
+    with col_imp:
+        st.markdown(f"#### ✨ Improved Script (Proposed v{orig_version + 1})")
+        st.text_area(
+            "Improved Candidate",
+            value=improved_script,
+            height=420,
+            disabled=True,
+            key=f"imp_script_compare_{orig_version}",
+        )
+
+    # Decision actions
+    btn_col1, btn_col2, btn_col3, btn_col4 = st.columns(4)
+    with btn_col1:
+        if st.button("✅ Accept & Apply Improved Script", type="primary", use_container_width=True):
+            new_version = orig_version + 1
+            st.session_state.active_script_version = new_version
+            st.session_state.generated_content["script"] = improved_script
+            st.session_state.script_history.append({
+                "version": new_version,
+                "label": f"v{new_version}: AI Improved ({focus})",
+                "script": improved_script,
+            })
+            st.session_state.chat_history.append({
+                "role": "assistant",
+                "content": f"✅ Applied AI Script Improvement (**{focus}**). Script updated to **Version {new_version}**!",
+            })
+            clear_analysis_state()
+            st.success(f"Script updated to Version {new_version}!")
+            st.rerun()
+
+    with btn_col2:
+        if st.button("🔍 Re-Analyze Improved Draft", use_container_width=True):
+            try:
+                with st.spinner("Analyzing improved candidate draft..."):
+                    new_analysis = analyze_script(
+                        script=improved_script,
+                        preferences={
+                            "topic": st.session_state.topic,
+                            "audience": st.session_state.audience,
+                            "tone": st.session_state.tone,
+                            "length": st.session_state.video_length,
+                            "style": st.session_state.content_style,
+                        },
+                        speaking_rate_wpm=DEFAULT_SPEAKING_RATE_WPM,
+                        llm=get_llm(temperature=0.2),
+                    )
+                orig_score = st.session_state.analysis_result.get("overall_score", 0) if st.session_state.analysis_result else 0
+                new_score = new_analysis.get("overall_score", 0)
+                score_delta = new_score - orig_score
+                delta_str = f"+{score_delta:.1f}" if score_delta > 0 else f"{score_delta:.1f}"
+                st.info(
+                    f"Candidate Analysis Complete! **New Quality Score: {new_score:.1f}/100** ({delta_str} pts vs original)"
+                )
+            except Exception as e:
+                st.error(f"Could not re-analyze candidate: {e}")
+
+    with btn_col3:
+        st.download_button(
+            label="📥 Download Improved TXT",
+            data=improved_script,
+            file_name=f"improved_script_v{orig_version + 1}.txt",
+            mime="text/plain",
+            use_container_width=True,
+        )
+
+    with btn_col4:
+        if st.button("❌ Discard Improvement", use_container_width=True):
+            st.session_state.improvement_result = None
+            st.session_state.improvement_script_version = None
+            st.rerun()
+
+
 def validate_topic(topic: str):
+
     """Return a user-facing validation message, or None when the topic is valid."""
     cleaned_topic = topic.strip()
 
@@ -499,6 +670,11 @@ def render_results():
 
     with script_tab:
         st.caption(f"Showing Active Version **{st.session_state.active_script_version}** • {word_count} words • Approx. {est_time} spoken time")
+        if (
+            st.session_state.improvement_result
+            and st.session_state.improvement_script_version == st.session_state.active_script_version
+        ):
+            st.info("💡 An improved draft has been generated! View the side-by-side comparison in the **🔍 AI Script Analyzer** tab.")
         st.markdown(current_script)
         st.download_button(
             label="📥 Download Script as TXT",
@@ -526,6 +702,44 @@ def render_results():
             st.session_state.active_script_version,
         ):
             render_analysis(analysis_result)
+
+            st.divider()
+            st.markdown("### ✨ Automatic Script Improvement (Week 8)")
+            st.caption(
+                "Apply the prioritized suggestions and weak area fixes to generate an improved, higher-retention script."
+            )
+
+            focus_col, custom_col = st.columns([1, 1])
+            with focus_col:
+                improvement_focus = st.selectbox(
+                    "Select Improvement Focus",
+                    [
+                        "All Analysis Recommendations (Recommended)",
+                        "Strengthen Hook & Opening (First 30 seconds)",
+                        "Add / Strengthen Call-to-Action (CTA)",
+                        "Cut Repetition & Tighten Flow",
+                        "Add Real-World Examples & Case Studies",
+                        "Custom Directives",
+                    ],
+                    key="improvement_focus_select",
+                )
+            with custom_col:
+                custom_feedback = st.text_input(
+                    "Optional Custom Directives",
+                    placeholder="e.g. Keep under 800 words, make it more energetic",
+                    key="improvement_custom_input",
+                )
+
+            if st.button("✨ Improve Script Based on Analysis", type="primary", use_container_width=True):
+                handle_improvement(improvement_focus, custom_feedback)
+
+            # Render comparison if an improved draft exists for this script version
+            if (
+                st.session_state.improvement_result
+                and st.session_state.improvement_script_version == st.session_state.active_script_version
+            ):
+                render_improvement_comparison(st.session_state.improvement_result)
+
         elif analysis_result:
             st.warning(
                 "This analysis belongs to an older script version. "

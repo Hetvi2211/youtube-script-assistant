@@ -178,16 +178,16 @@ ANALYZER_PROMPT = PromptTemplate(
 # ==========================================
 # 5. Script Improvement Prompt
 # ==========================================
-IMPROVEMENT_PROMPT_TEMPLATE = """You are a master YouTube script editor.
+IMPROVEMENT_PROMPT_TEMPLATE = """You are a master YouTube script editor and video retention director.
 
-Revise and polish the original YouTube script using the provided AI analysis report and improvement suggestions.
+Revise, enhance, and rewrite the original YouTube script using the provided AI analysis report, identified weaknesses, and improvement suggestions.
 
 Original Script:
 === SCRIPT START ===
 {script}
 === SCRIPT END ===
 
-Analysis & Improvement Suggestions:
+Analysis & Weaknesses Report:
 === ANALYSIS START ===
 {analysis}
 === ANALYSIS END ===
@@ -195,12 +195,27 @@ Analysis & Improvement Suggestions:
 User Custom Feedback / Directives (if any):
 {user_feedback}
 
-Requirements:
-- Preserve the core topic, valuable insights, and structural intent.
-- Fix all identified weaknesses (strengthen the hook, remove fluff, smooth out transitions, sharpen CTA).
-- Enhance visual and audio production cues in brackets [Visual: ...].
-- Maintain spoken conversational delivery suitable for video.
-- Return the full, newly improved and ready-to-record YouTube script.
+Improvement Guidelines:
+1. Address the Specific Weaknesses Identified:
+   - If the hook is rated weak or lacks curiosity/stakes, replace it with an irresistible, high-retention opening (first 30 seconds).
+   - If a Call-to-Action (CTA) is missing or weak, add a clear, natural, and compelling CTA (encouraging subscribe, comment, or like).
+   - If repetition or pacing drag is flagged, cut unnecessary filler and sharpen transitions between points.
+   - If examples or practical applications are missing, weave in concrete, relatable real-world examples or mini case studies.
+   - If audience fit or clarity is low, adapt vocabulary and explanations to be clear and conversational.
+2. Structure & Production Notes:
+   - Retain spoken dialogue cadence suitable for natural video delivery.
+   - Preserve valuable insights, key factual takeaways, and overall video theme.
+   - Include or enhance visual and sound effect cues in brackets [Visual: ...], [Sound Effect: ...], [On-screen text: ...].
+3. Output Format Requirements:
+   First, provide a concise bullet list of the major improvements applied under the header:
+   [SUMMARY OF IMPROVEMENTS]
+   - Bullet point of change 1
+   - Bullet point of change 2
+   - Bullet point of change 3
+
+   Then, output the complete, newly revised and polished script under the header:
+   [IMPROVED SCRIPT]
+   (Include the full script with [TITLE SUGGESTION], [HOOK], [INTRODUCTION], [MAIN CONTENT], [CONCLUSION], [CALL-TO-ACTION])
 """
 
 IMPROVEMENT_PROMPT = PromptTemplate(
