@@ -19,6 +19,12 @@ from modules.script_improver import (
     compare_scripts,
     improve_script,
 )
+from modules.scene_generator import (
+    SceneBreakdownError,
+    breakdown_is_current,
+    generate_scene_breakdown,
+    script_fingerprint as scene_script_fingerprint,
+)
 
 st.set_page_config(
     page_title="YouTube Script Writing Assistant",
@@ -77,6 +83,10 @@ def initialize_session_state():
         # Week 8: Automatic Script Improvement State
         "improvement_result": None,
         "improvement_script_version": None,
+        # Week 9: Scene Breakdown State
+        "scene_breakdown": None,
+        "scene_script_hash": None,
+        "scene_script_label": None,
     }
 
     for key, value in defaults.items():
@@ -107,6 +117,67 @@ def clear_analysis_state():
     st.session_state.analysis_script_version = None
     st.session_state.improvement_result = None
     st.session_state.improvement_script_version = None
+    st.session_state.scene_breakdown = None
+    st.session_state.scene_script_hash = None
+    st.session_state.scene_script_label = None
+
+
+def handle_scene_breakdown(script: str, script_label: str):
+    """Generate a breakdown only for the explicitly selected script."""
+    if not script.strip():
+        st.warning("Select or generate a non-empty script before creating a scene breakdown.")
+        return
+    try:
+        with st.spinner("Generating scene-by-scene production plan..."):
+            result = generate_scene_breakdown(
+                script=script,
+                audience=st.session_state.audience,
+                tone=st.session_state.tone,
+                video_length=st.session_state.video_length,
+                content_style=st.session_state.content_style,
+                llm=get_llm(temperature=0.2),
+            )
+        st.session_state.scene_breakdown = result
+        st.session_state.scene_script_hash = scene_script_fingerprint(script)
+        st.session_state.scene_script_label = script_label
+        st.success("Scene breakdown generated successfully.")
+    except (SceneBreakdownError, ValueError) as error:
+        st.session_state.scene_breakdown = None
+        st.session_state.scene_script_hash = None
+        st.session_state.scene_script_label = None
+        st.error(f"Scene breakdown could not be completed: {error}")
+    except Exception as error:
+        st.session_state.scene_breakdown = None
+        st.session_state.scene_script_hash = None
+        st.session_state.scene_script_label = None
+        st.error(f"Scene breakdown failed unexpectedly: {error}")
+
+
+def render_scene_breakdown(result: dict):
+    """Render normalized scene data in a readable, export-friendly layout."""
+    total_seconds = result["total_duration_seconds"]
+    minutes, seconds = divmod(total_seconds, 60)
+    metric_col1, metric_col2, metric_col3 = st.columns(3)
+    metric_col1.metric("Total Scenes", result["total_scenes"])
+    metric_col2.metric("Estimated Duration", f"{minutes}m {seconds:02d}s")
+    metric_col3.metric("Source", st.session_state.scene_script_label or "Selected script")
+
+    for scene in result["scenes"]:
+        with st.expander(
+            f"Scene {scene['scene_number']} · {scene['start_time']} - {scene['end_time']} "
+            f"({scene['duration_seconds']}s)",
+            expanded=scene["scene_number"] == 1,
+        ):
+            scene_col1, scene_col2 = st.columns(2)
+            with scene_col1:
+                st.markdown("**Voiceover / narration**")
+                st.write(scene["voiceover"])
+                st.markdown("**Visual suggestion**")
+                st.write(scene["visual_suggestion"])
+            with scene_col2:
+                st.markdown("**On-screen text**")
+                st.write(scene["on_screen_text"] or "No on-screen text suggested.")
+
 
 
 def handle_analysis():
@@ -654,11 +725,12 @@ def render_results():
 
     st.divider()
 
-    title_tab, script_tab, analyzer_tab, refine_tab, history_tab, info_tab = st.tabs(
+    title_tab, script_tab, analyzer_tab, scene_tab, refine_tab, history_tab, info_tab = st.tabs(
         [
             "💡 Generated Titles",
             f"📜 Active Script (v{st.session_state.active_script_version})",
             "🔍 AI Script Analyzer",
+            "🎬 Scene Breakdown",
             "💬 Interactive Refinement & Chat",
             "🕰️ Version History",
             "ℹ️ Parameters & Metadata",
@@ -747,6 +819,46 @@ def render_results():
             )
         else:
             st.info("Click **Analyze Script** to evaluate the active draft.")
+
+    with scene_tab:
+        st.markdown("### 🎬 Scene-wise Script Breakdown (Week 9)")
+        st.caption(
+            "Convert the active script or an unaccepted improved candidate into a "
+            "timed, production-ready scene plan. Generation runs only when requested."
+        )
+        scene_options = {
+            f"Active script (v{st.session_state.active_script_version})": current_script,
+        }
+        if (
+            st.session_state.improvement_result
+            and st.session_state.improvement_script_version == st.session_state.active_script_version
+        ):
+            candidate = st.session_state.improvement_result.get("improved_script", "").strip()
+            if candidate:
+                scene_options["Improved candidate (not applied)"] = candidate
+        selected_label = st.selectbox(
+            "Script to break down",
+            list(scene_options),
+            key="scene_script_selector",
+        )
+        selected_scene_script = scene_options[selected_label]
+        if st.button("Generate Scene Breakdown", type="primary", use_container_width=True):
+            handle_scene_breakdown(selected_scene_script, selected_label)
+
+        if st.session_state.scene_breakdown:
+            if breakdown_is_current(
+                st.session_state.scene_breakdown,
+                st.session_state.scene_script_hash,
+                selected_scene_script,
+            ):
+                render_scene_breakdown(st.session_state.scene_breakdown)
+            else:
+                st.info(
+                    "The selected script changed. Generate a new scene breakdown to "
+                    "avoid displaying results for an older draft."
+                )
+        else:
+            st.info("Select a script and click **Generate Scene Breakdown**.")
 
     with refine_tab:
         st.markdown("### ⚡ Quick Script Modifications")

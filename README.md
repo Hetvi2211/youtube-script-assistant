@@ -200,3 +200,50 @@ stale analysis after regeneration.
 ## 👥 Team 
 - Dhara Patel 
 - Hetvi Rabari 
+
+## 🎬 Week 9: Scene-wise Script Breakdown Generator
+
+Week 9 converts the active generated script, or an unaccepted Week 8 improved
+candidate, into a structured production plan. Open the **Scene Breakdown** tab,
+select the source script, and click **Generate Scene Breakdown**. The model is
+called only after the button is pressed, and the result is stored in Streamlit
+session state against a SHA-256 fingerprint of the exact source script.
+
+Each result has this JSON-compatible shape:
+
+```json
+{
+  "scenes": [
+    {
+      "scene_number": 1,
+      "start_time": "0:00",
+      "end_time": "0:30",
+      "duration_seconds": 30,
+      "voiceover": "Narration from the supplied script",
+      "visual_suggestion": "Relevant B-roll, demonstration, or screen recording",
+      "on_screen_text": "Concise key phrase"
+    }
+  ],
+  "total_duration_seconds": 120,
+  "total_scenes": 4
+}
+```
+
+The LLM supplies the scene content, while Python validates the required fields
+and recalculates a contiguous timeline. A selected video-length range uses its
+midpoint as the target (for example, 5–10 minutes becomes 7.5 minutes). If no
+duration is available, the target is estimated from the script word count at
+140 words per minute. These are planning estimates; recording and editing may
+change the final runtime.
+
+Run the feature and its mocked unit tests:
+
+```bash
+streamlit run app.py
+python -m unittest -v test_scene_generator.py
+```
+
+Known limitations: scene boundaries and practical visual choices are
+AI-assisted, and the current UI does not add a new export format. The validated
+dictionary is intentionally reusable by the existing export layer in a later
+week.

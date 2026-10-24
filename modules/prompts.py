@@ -225,30 +225,57 @@ IMPROVEMENT_PROMPT = PromptTemplate(
 
 
 # ==========================================
-# 6. Scene-wise Breakdown Prompt
+# 6. Scene-wise Breakdown Prompt (Week 9)
 # ==========================================
 SCENE_PROMPT_TEMPLATE = """You are a professional video production assistant and director.
 
-Convert the following YouTube video script into a detailed, scene-by-scene production shot list table.
+Read the entire script before dividing it into logical, sequential scenes. Preserve its
+meaning, key points, examples, and conclusion. Do not invent facts not supported by it.
 
 === SCRIPT START ===
 {script}
 === SCRIPT END ===
 
-Output Requirements:
-Break down the script sequentially into scenes. Format as a clean markdown table with these columns:
-- Scene #
-- Timecode (Approx. MM:SS - MM:SS)
-- Voiceover / Spoken Script
-- Visual Suggestion (Camera shot, B-roll, animation, stock footage)
-- On-Screen Text / Graphics
-- Audio & SFX Cues
+Audience: {audience}
+Tone: {tone}
+Content style: {content_style}
+Requested video length: {video_length}
+Python word count: {word_count}
+Python target duration in seconds: {target_duration_seconds}
+Estimated narration speed: {narration_speed_wpm} words per minute
 
-Ensure the scene count logically covers the entire script from start to finish.
+Divide the script into only meaningful scenes. Use shorter scenes for the hook,
+transitions, demonstrations, or important visual moments when appropriate. Avoid
+unnecessary divisions and duplicate content. The final scene must include the
+original conclusion or CTA when one is present.
+
+Return ONLY one valid JSON object, with no Markdown fences, using exactly this shape:
+{{
+  "scenes": [
+    {{
+      "scene_number": 1,
+      "start_time": "0:00",
+      "end_time": "0:30",
+      "duration_seconds": 30,
+      "voiceover": "The corresponding narration from the supplied script.",
+      "visual_suggestion": "Practical B-roll, demonstration, screen recording, animation, diagram, or footage.",
+      "on_screen_text": "Concise title, label, or key phrase."
+    }}
+  ],
+  "total_duration_seconds": {target_duration_seconds},
+  "total_scenes": 1
+}}
+
+Every scene must have all seven fields. Use sequential scene numbers. Timings are
+estimates; the application will normalize them in Python so scenes are positive,
+contiguous, and end at the calculated target duration.
 """
 
 SCENE_PROMPT = PromptTemplate(
-    input_variables=["script"],
+    input_variables=[
+        "script", "audience", "tone", "video_length", "content_style",
+        "word_count", "target_duration_seconds", "narration_speed_wpm",
+    ],
     template=SCENE_PROMPT_TEMPLATE
 )
 
