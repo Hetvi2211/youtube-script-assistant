@@ -776,7 +776,7 @@ def render_results():
             render_analysis(analysis_result)
 
             st.divider()
-            st.markdown("### ✨ Automatic Script Improvement (Week 8)")
+            st.markdown("### ✨ Automatic Script Improvement")
             st.caption(
                 "Apply the prioritized suggestions and weak area fixes to generate an improved, higher-retention script."
             )
@@ -821,7 +821,7 @@ def render_results():
             st.info("Click **Analyze Script** to evaluate the active draft.")
 
     with scene_tab:
-        st.markdown("### 🎬 Scene-wise Script Breakdown (Week 9)")
+        st.markdown("### 🎬 Scene-wise Script Breakdown")
         st.caption(
             "Convert the active script or an unaccepted improved candidate into a "
             "timed, production-ready scene plan. Generation runs only when requested."
