@@ -25,6 +25,18 @@ from modules.scene_generator import (
     generate_scene_breakdown,
     script_fingerprint as scene_script_fingerprint,
 )
+from modules.content_generator import (
+    ContentPackageError,
+    generate_content_package,
+    format_package_as_text,
+    package_is_current,
+    script_fingerprint as content_script_fingerprint,
+)
+from modules.exporter import (
+    export_to_txt,
+    export_to_docx,
+    export_to_pdf,
+)
 
 st.set_page_config(
     page_title="YouTube Script Writing Assistant",
@@ -87,6 +99,10 @@ def initialize_session_state():
         "scene_breakdown": None,
         "scene_script_hash": None,
         "scene_script_label": None,
+        # Week 10: Content Package State
+        "content_package": None,
+        "package_script_hash": None,
+        "package_script_label": None,
     }
 
     for key, value in defaults.items():
@@ -120,6 +136,9 @@ def clear_analysis_state():
     st.session_state.scene_breakdown = None
     st.session_state.scene_script_hash = None
     st.session_state.scene_script_label = None
+    st.session_state.content_package = None
+    st.session_state.package_script_hash = None
+    st.session_state.package_script_label = None
 
 
 def handle_scene_breakdown(script: str, script_label: str):
@@ -151,6 +170,136 @@ def handle_scene_breakdown(script: str, script_label: str):
         st.session_state.scene_script_hash = None
         st.session_state.scene_script_label = None
         st.error(f"Scene breakdown failed unexpectedly: {error}")
+
+
+def handle_content_package(script: str, script_label: str):
+    """Generate YouTube Content Package only for the explicitly selected script."""
+    if not script.strip():
+        st.warning("Select or generate a non-empty script before creating a content package.")
+        return
+    try:
+        # Determine title from generated titles or topic
+        title = ""
+        if st.session_state.generated_content and st.session_state.generated_content.get("titles"):
+            raw_titles = st.session_state.generated_content["titles"].splitlines()
+            for line in raw_titles:
+                clean = line.strip().lstrip("1234567890. *-\"")
+                if clean and not clean.startswith("Why:"):
+                    title = clean
+                    break
+        if not title:
+            title = st.session_state.topic.strip()
+
+        with st.spinner("Generating YouTube Content Package (Description, Keywords, Tags, Hashtags, CTA)..."):
+            package = generate_content_package(
+                topic=st.session_state.topic.strip(),
+                title=title,
+                script=script,
+                audience=st.session_state.audience,
+                llm=get_llm(temperature=0.3),
+            )
+        st.session_state.content_package = package
+        st.session_state.package_script_hash = content_script_fingerprint(script)
+        st.session_state.package_script_label = script_label
+        st.success("YouTube Content Package generated successfully.")
+    except (ContentPackageError, ValueError) as error:
+        st.session_state.content_package = None
+        st.session_state.package_script_hash = None
+        st.session_state.package_script_label = None
+        st.error(f"Content package could not be completed: {error}")
+    except Exception as error:
+        st.session_state.content_package = None
+        st.session_state.package_script_hash = None
+        st.session_state.package_script_label = None
+        st.error(f"Content package failed unexpectedly: {error}")
+
+
+def render_content_package(package: dict):
+    """Render the YouTube content package and multi-format export buttons."""
+    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+    metric_col1.metric("Keywords", len(package.get("keywords", [])))
+    metric_col2.metric("Tags", len(package.get("tags", [])))
+    metric_col3.metric("Hashtags", len(package.get("hashtags", [])))
+    metric_col4.metric("Source", st.session_state.package_script_label or "Active script")
+
+    st.markdown(f"#### 📌 Video Title\n**{package.get('title', '')}**")
+    st.markdown(f"#### 🎣 Video Hook\n*{package.get('hook', '')}*")
+
+    st.divider()
+
+    st.markdown("#### 📝 SEO Video Description")
+    st.text_area(
+        "Description",
+        value=package.get("description", ""),
+        height=220,
+        key="content_package_desc_view",
+    )
+
+    c_kw, c_tag = st.columns(2)
+    with c_kw:
+        st.markdown("#### 🔑 Target Keywords")
+        keywords_str = ", ".join(package.get("keywords", []))
+        st.info(keywords_str or "No keywords generated.")
+
+    with c_tag:
+        st.markdown("#### 🏷️ YouTube Tags (Studio Ready)")
+        tags_str = ", ".join(package.get("tags", []))
+        st.text_area(
+            "Tags (Copy into YouTube Studio)",
+            value=tags_str,
+            height=100,
+            key="content_package_tags_view",
+        )
+
+    c_hash, c_cta = st.columns(2)
+    with c_hash:
+        st.markdown("#### #️⃣ Hashtags")
+        hashtags_str = " ".join(package.get("hashtags", []))
+        st.info(hashtags_str or "No hashtags generated.")
+
+    with c_cta:
+        st.markdown("#### 📢 Call-to-Action (CTA) Copy")
+        st.write(package.get("call_to_action", ""))
+
+    st.divider()
+    st.markdown("### 💾 Export Complete Content Package")
+    st.caption("Download the complete package (Title, Hook, Script, Description, Keywords, Tags, Hashtags, CTA) in your preferred format:")
+
+    pkg_text = format_package_as_text(package)
+
+    exp_col1, exp_col2, exp_col3 = st.columns(3)
+    with exp_col1:
+        st.download_button(
+            label="📥 Export as TXT",
+            data=export_to_txt(pkg_text),
+            file_name="youtube_content_package.txt",
+            mime="text/plain",
+            use_container_width=True,
+        )
+    with exp_col2:
+        try:
+            docx_data = export_to_docx(pkg_text, title=f"YouTube Package: {package.get('title', 'Video')}")
+            st.download_button(
+                label="📄 Export as DOCX (Word)",
+                data=docx_data,
+                file_name="youtube_content_package.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True,
+            )
+        except Exception as err:
+            st.warning(f"DOCX export error: {err}")
+    with exp_col3:
+        try:
+            pdf_data = export_to_pdf(pkg_text, title=f"YouTube Package: {package.get('title', 'Video')}")
+            st.download_button(
+                label="📑 Export as PDF",
+                data=pdf_data,
+                file_name="youtube_content_package.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        except Exception as err:
+            st.warning(f"PDF export error: {err}")
 
 
 def render_scene_breakdown(result: dict):
@@ -725,12 +874,13 @@ def render_results():
 
     st.divider()
 
-    title_tab, script_tab, analyzer_tab, scene_tab, refine_tab, history_tab, info_tab = st.tabs(
+    title_tab, script_tab, analyzer_tab, scene_tab, package_tab, refine_tab, history_tab, info_tab = st.tabs(
         [
             "💡 Generated Titles",
             f"📜 Active Script (v{st.session_state.active_script_version})",
             "🔍 AI Script Analyzer",
             "🎬 Scene Breakdown",
+            "📦 YouTube Content Package",
             "💬 Interactive Refinement & Chat",
             "🕰️ Version History",
             "ℹ️ Parameters & Metadata",
@@ -859,6 +1009,47 @@ def render_results():
                 )
         else:
             st.info("Select a script and click **Generate Scene Breakdown**.")
+
+    with package_tab:
+        st.markdown("### 📦 YouTube Content Package")
+        st.caption(
+            "Generate description, keywords, tags, hashtags, and CTA for publishing on YouTube. "
+            "You can also export the complete package in TXT, DOCX, or PDF format."
+        )
+        pkg_options = {
+            f"Active script (v{st.session_state.active_script_version})": current_script,
+        }
+        if (
+            st.session_state.improvement_result
+            and st.session_state.improvement_script_version == st.session_state.active_script_version
+        ):
+            candidate = st.session_state.improvement_result.get("improved_script", "").strip()
+            if candidate:
+                pkg_options["Improved candidate (not applied)"] = candidate
+        selected_pkg_label = st.selectbox(
+            "Script for Content Package",
+            list(pkg_options),
+            key="package_script_selector",
+        )
+        selected_pkg_script = pkg_options[selected_pkg_label]
+
+        if st.button("Generate YouTube Content Package", type="primary", use_container_width=True):
+            handle_content_package(selected_pkg_script, selected_pkg_label)
+
+        if st.session_state.content_package:
+            if package_is_current(
+                st.session_state.content_package,
+                st.session_state.package_script_hash,
+                selected_pkg_script,
+            ):
+                render_content_package(st.session_state.content_package)
+            else:
+                st.info(
+                    "The selected script changed. Generate a new content package to "
+                    "avoid displaying metadata for an older draft."
+                )
+        else:
+            st.info("Select a script and click **Generate YouTube Content Package**.")
 
     with refine_tab:
         st.markdown("### ⚡ Quick Script Modifications")

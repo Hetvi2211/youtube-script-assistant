@@ -244,6 +244,28 @@ python -m unittest -v test_scene_generator.py
 ```
 
 Known limitations: scene boundaries and practical visual choices are
-AI-assisted, and the current UI does not add a new export format. The validated
-dictionary is intentionally reusable by the existing export layer in a later
-week.
+AI-assisted. The validated dictionary is fully integrated into the export layer.
+
+---
+
+## 📦 Week 10: YouTube Content Package & Multi-Format Exporter
+
+Week 10 delivers the final publishing stage by turning the script into a full YouTube metadata and publishing package:
+
+### Components Generated:
+1. **Title & Hook**: Pulled and confirmed from the script.
+2. **SEO Description**: Concise summary, chapter timestamps, key takeaways, and call-to-actions.
+3. **Target Keywords**: 10 high-intent search terms.
+4. **YouTube Tags**: Comma-separated tag list ready for YouTube Studio.
+5. **Hashtags**: Relevant clickable hashtags starting with `#`.
+6. **Call-to-Action (CTA)**: High-converting variations for viewer conversion.
+
+### Multi-Format Exporting:
+- **TXT**: Clean structured text file.
+- **DOCX**: Formatted Microsoft Word document with styled headers.
+- **PDF**: Publication-ready PDF document with styling and dividers.
+
+### Running Week 10 Tests:
+```bash
+python -m unittest -v test_week10.py
+```
